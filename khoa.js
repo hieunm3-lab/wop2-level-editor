@@ -1,7 +1,7 @@
 // Màn mở khoá của bản web (pages_sync.py thay các <script> editor bằng file này). Code editor + art nằm trong app.bin đã mã hoá
 // (pages_mahoa.js); người mở link chọn file wop2-editor.key → giải mã ngay trong trình duyệt (WebCrypto AES-GCM + gunzip) rồi chạy.
 // Khoá nhớ trong localStorage của máy đó (bỏ nhớ: mở link kèm ?quenkhoa). window.WOP2_DEC(url) để wop2_app.js giải seqdata/data.bin.
-(()=>{const me=document.currentScript,APP=me.dataset.app||"app.bin";window.WOP2_SEQ=me.dataset.seq||"seqdata/data.bin";
+(()=>{const me=document.currentScript,APP=me.dataset.app||"app.bin";window.WOP2_SEQ=me.dataset.seq||"seqdata/data.bin";window.WOP2_SEQAPP=me.dataset.seqapp||null;
 const LS="wop2ed_key";const lsGet=()=>{try{return localStorage.getItem(LS)}catch(e){return null}},lsSet=v=>{try{v==null?localStorage.removeItem(LS):localStorage.setItem(LS,v)}catch(e){}};
 if(/[?&]quenkhoa\b/.test(location.search))lsSet(null);
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));

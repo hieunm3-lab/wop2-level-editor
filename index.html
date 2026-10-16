@@ -131,7 +131,7 @@ body.dragover #dropHint{display:flex}
     <div class="grp tbig">
       <button id="btnOpen" title="Nạp 1 hay nhiều file Level N.json (đã mã hoá hoặc JSON thường) — Ctrl+O">📂 <span class="tx">Nạp file</span></button>
       <button id="btnFolder" title="Nạp cả thư mục vN (chỉ đọc). Muốn ghi đè thẳng vào thư mục thì dùng 📌">📁 <span class="tx">Nạp thư mục</span></button>
-      <button id="btnPlan" title="📋 Nạp file plan của level-sequencer (vd 'data kiểm tra thứ tự level ver2.json'): thư viện xếp đúng thứ tự plan, W = level WOP, B = level BB. Cần data.js của level-sequencer (tự nạp khi chạy trên máy, không thì chọn file)">📋 <span class="tx">Plan</span></button>
+      <button id="btnPlan" title="📋 Nạp file plan của level-sequencer (vd 'data kiểm tra thứ tự level ver2.json'): thư viện xếp đúng thứ tự plan, W = level WOP, B = level BB. Cần data.js của level-sequencer (tự nạp khi chạy trên máy, không thì chọn file)">📋 <span class="tx">Plan</span></button><button id="btnPlanOut" title="📤 Xuất file plan (.json) đúng định dạng level-sequencer — từ plan đang nạp, hoặc từ phương án đang mở khi tích 📋 Sequencer">📤</button>
     </div>
     <div class="grp">
       <button id="btnPin" title="📌 Gắn thư mục ghi đè (vd Resources\v21) — gắn xong tự nạp thư mục. Alt+bấm = gỡ">📌 <span class="tx lbx" id="pinName">Ghi đè vào…</span></button>
@@ -153,6 +153,7 @@ body.dragover #dropHint{display:flex}
     </div>
     <div class="grow"></div>
     <div class="grp"><label class="chk" title="🎮 Chuyển giao diện + thao tác giống scene LevelEditor trong Unity (Groups: SaveAndLoad, MapEditor, BlockEditor, MechanicEditor, PipeEditor…, Inspector bên phải). Bỏ tích = về giao diện thường"><input type="checkbox" id="optUnity"><span class="tx">🎮 Kiểu Unity</span></label></div>
+    <div class="grp"><label class="chk" title="📋 Mở tool level-sequencer ngay trong editor (sắp thứ tự level WOP × BB, kiểm, lưu / xuất plan). Bấm đúp level hoặc ✏️ bên sequencer = mở level đó trong editor 3D. Bỏ tích = về editor"><input type="checkbox" id="optSeq"><span class="tx">📋 Sequencer</span></label></div>
     <div class="grp">
       <button id="btnLock" title="🔒 Khoá chỉ xem (chặn mọi sửa bằng chuột/phím)">🔒</button>
       <button id="btnHelp" title="Bật/tắt chữ chỉ dẫn">❔ <span class="tx">Chỉ dẫn</span></button>
@@ -284,6 +285,6 @@ body.dragover #dropHint{display:flex}
 <input type="file" id="seqDataIn" accept=".js,.json" style="display:none">
 
 <script src="three.min.js?v=eb854986"></script>
-<script src="khoa.js?v=5dd83819" data-app="app.bin?v=a02e936f" data-seq="seqdata/data.bin?v=d7178b8b"></script>
+<script src="khoa.js?v=d74e7d8d" data-app="app.bin?v=78cc9046" data-seq="seqdata/data.bin?v=7c20a504" data-seqapp="seq.bin?v=d146e8df"></script>
 </body>
 </html>
