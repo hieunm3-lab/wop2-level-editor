@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WOP 2 Level Editor</title>
+<style>
+/* ===== Màu: tối kiểu editor OBS (ô nổi kính tối, viền mảnh, chữ to đậm) ===== */
+:root{--bg:#12141a;--panel:#181b23;--panel2:#1f232d;--line:#2c323f;--txt:#e9ecf3;--dim:#a3abbb;--ac:#f59e0b;--ac2:#38bdf8;
+--ok:#3ecf6a;--err:#f05252;--warn:#fbbf24;--hard:#e8434f;--sh:#a855f7;--sp:#38bdf8;--board:#1d2330;--cell:#36425a;--cellb:#2f3a50;--out:#151a24;--sel:#fde047}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:600 14px/1.35 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+button,input,select{font:inherit;color:var(--txt)}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer;white-space:nowrap;font-weight:700;font-size:13px}
+button:hover{border-color:#4a5368;background:#262b37}
+button.on{background:#3a2d12;border-color:var(--ac);color:#ffd88a}
+button:disabled{opacity:.45;cursor:default}
+input,select{background:#10131a;border:1px solid var(--line);border-radius:6px;padding:4px 6px;min-width:0}
+input[type=number]{width:62px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);vertical-align:-3px}
+kbd{background:#262b37;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;font:700 11px Consolas,monospace}
+*{scrollbar-width:thin;scrollbar-color:#3a4254 transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#3a4254;border-radius:8px}::-webkit-scrollbar-track{background:transparent}
+
+#app{display:grid;grid-template-columns:var(--lw,250px) 1fr var(--rw,330px);grid-template-rows:auto auto 1fr;height:100vh}
+.tb{grid-column:1/4;display:flex;flex-wrap:nowrap;align-items:center;gap:6px;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--line);overflow:hidden;min-width:0}
+.tb .grp{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.tb .sep{width:1px;height:24px;background:var(--line);flex:0 0 auto}
+.tb .grow{flex:1 1 0;min-width:0}
+.t2lab{font-weight:800;font-size:13px;color:var(--txt)}
+#title{font-weight:800;font-size:15px;color:#ffd88a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto;min-width:0}
+.seg{display:flex;flex:0 0 auto;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+#segDiff button[data-v="0"].on{background:#163a22;color:var(--ok)}
+#segDiff button[data-v="1"].on{background:#3f1418;color:var(--hard)}
+#segDiff button[data-v="2"].on{background:#2c1645;color:var(--sh)}
+#segDiff button[data-v="3"].on{background:#0f2f40;color:var(--sp)}
+/* nén thanh theo ĐO THẬT (fitBars), không theo @media */
+#app.tbnarrow .tx{display:none}
+#app.tbnarrow .tbig .tx{display:inline}
+#app.tbtiny .lbx{display:none}
+#app.tbtiny #segDiff .full{display:none}
+#app.tbtiny #segDiff .short{display:inline!important}
+#app.tbwrap .tb{flex-wrap:wrap}
+#app.tbwrap .t2br{flex-basis:100%;height:0}
+
+aside{background:var(--panel);overflow:auto;min-height:0;padding:8px}
+#left{border-right:1px solid var(--line)}
+#right{border-left:1px solid var(--line)}
+.card{background:var(--panel2);border:1px solid var(--line);border-left:3px solid #4a5368;border-radius:9px;margin:0 0 8px;overflow:hidden}
+.card>h3{margin:0;padding:7px 10px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
+.card>h3::before{content:"▾";color:var(--dim);font-size:11px}
+.card.closed>h3::before{content:"▸"}
+.card.closed>.bd{display:none}
+.card>.bd{padding:4px 10px 10px}
+.card.c-sel{border-left-color:#f59e0b}.card.c-door{border-left-color:#38bdf8}.card.c-lv{border-left-color:#3ecf6a}
+.card.c-chk{border-left-color:#f05252}.card.c-rep{border-left-color:#a855f7}.card.c-misc{border-left-color:#94a3b8}.card.c-lib{border-left-color:#3ecf6a}
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:5px 0}
+.fld{display:flex;flex-direction:column;gap:2px}
+.fld>.cap{font-size:11px;color:var(--dim);font-weight:600}
+label.chk{display:inline-flex;align-items:center;gap:5px;text-transform:none;cursor:pointer;font-weight:700}
+.helptx{display:none;color:var(--dim);font-size:12px;font-weight:500;margin:4px 0}
+body.help .helptx{display:block}
+.mut{color:var(--dim);font-weight:500;font-size:12px}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:800;border:1px solid var(--line)}
+
+/* bảng hình khối + màu */
+#palSearch{width:100%;margin-bottom:6px}
+.shapes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.shp{background:#10131a;border:1px solid var(--line);border-radius:7px;padding:3px;cursor:pointer;text-align:center;font-size:11px;color:var(--dim)}
+.shp canvas{display:block;margin:0 auto}
+.shp.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac) inset;color:#ffd88a}
+.shp:hover{border-color:#5a647b}
+.cols{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.sw{height:26px;border-radius:6px;border:2px solid transparent;cursor:pointer;position:relative}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px #000 inset}
+.sw span{position:absolute;inset:auto 0 -1px 0;text-align:center;font:800 9px/1 "Segoe UI";color:#fff;text-shadow:0 0 2px #000}
+.grpttl{display:flex;justify-content:space-between;align-items:center;margin:8px 0 4px;font-size:12px;color:var(--dim);text-transform:uppercase;cursor:pointer}
+
+/* thư viện level */
+#lib{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;max-height:42vh;overflow:auto}
+#lib .lv{background:#10131a;border:1px solid var(--line);border-radius:6px;padding:3px 0;text-align:center;cursor:pointer;font-size:12px;font-weight:800;position:relative}
+#lib .lv:hover{border-color:#5a647b}
+#lib .lv.cur{border-color:var(--ac);color:#ffd88a}
+#lib .lv.d1{box-shadow:inset 0 -3px 0 var(--hard)}#lib .lv.d2{box-shadow:inset 0 -3px 0 var(--sh)}#lib .lv.d3{box-shadow:inset 0 -3px 0 var(--sp)}
+#lib .lv.bb{color:#c4b5fd;font-style:italic}
+#lib .lv.bad::after{content:"";position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--err)}
+
+/* khung vẽ + ô nổi */
+#cwrap{position:relative;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#22427c 0%,#162d5a 45%,#0d1834 100%)}
+#cv,#ov{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#noGL{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:18px;color:var(--warn);text-align:center;padding:30px}
+.dock{position:absolute;background:rgba(14,16,22,.92);border:1px solid var(--line);border-radius:9px;box-shadow:0 4px 14px #0006;padding:6px 10px;font-size:12.5px}
+#stats{left:10px;top:10px;pointer-events:none;line-height:1.5}
+#issueDock{left:10px;bottom:34px;max-width:min(560px,70%);max-height:34%;overflow:auto}
+#issueDock:empty::before{content:"✅ Không có lỗi game";color:var(--ok);font-weight:800}
+#issueDock.okpill{border-radius:999px;padding:3px 12px}
+#issueDock .it{cursor:pointer;padding:1px 0}
+#issueDock .it:hover{text-decoration:underline}
+#issueDock .e{color:#ff8a8a}#issueDock .w{color:var(--warn)}
+#balDock{right:10px;top:10px;max-height:60%;overflow:auto}
+#balDock table{border-collapse:collapse}
+#balDock td{padding:1px 6px;text-align:right}
+#balDock td:first-child{text-align:left}
+#balDock .bad td{color:#ff8a8a}
+#hint{position:absolute;left:0;right:0;bottom:0;padding:5px 12px;font-size:12.5px;color:var(--dim);background:linear-gradient(transparent,#12141acc);transition:opacity .6s;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1200px){#app{--lw:210px;--rw:285px}}
+#hint.fade{opacity:.38}
+#toastLuu{position:fixed;z-index:2147483647;background:#15803d;color:#fff;font:800 16px "Segoe UI";padding:10px 18px;border-radius:10px;box-shadow:0 6px 22px #000a;pointer-events:none;opacity:0;transition:opacity .6s;transform:translateX(-50%);text-align:center;max-width:80vw}
+#toastLuu.show{opacity:1;transition:none}
+#toastLuu.bad{background:#b91c1c}
+#toastLuu small{display:block;font-weight:600;font-size:13px;opacity:.9}
+.lockbadge{position:absolute;right:10px;bottom:34px;color:var(--warn);font-weight:800}
+#dropHint{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#0009;font-size:22px;font-weight:800;border:3px dashed var(--ac);z-index:5}
+body.dragover #dropHint{display:flex}
+.clist .crow{display:flex;gap:4px;align-items:center;margin:3px 0}
+.clist .dot{width:18px;height:18px;border-radius:5px;border:1px solid #0008;flex:0 0 auto}
+.clist select{width:96px}
+.miniBtn{padding:2px 7px;font-size:12px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;font-size:12.5px}
+.kv b{color:var(--dim);font-weight:600}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- THANH 1: tệp + thao tác -->
+  <div class="tb" id="topbar1">
+    <div class="grp"><span id="title">WOP 2 Level Editor</span></div>
+    <div class="sep"></div>
+    <div class="grp tbig">
+      <button id="btnOpen" title="Nạp 1 hay nhiều file Level N.json (đã mã hoá hoặc JSON thường) — Ctrl+O">📂 <span class="tx">Nạp file</span></button>
+      <button id="btnFolder" title="Nạp cả thư mục vN (chỉ đọc). Muốn ghi đè thẳng vào thư mục thì dùng 📌">📁 <span class="tx">Nạp thư mục</span></button>
+      <button id="btnPlan" title="📋 Nạp file plan của level-sequencer (vd 'data kiểm tra thứ tự level ver2.json'): thư viện xếp đúng thứ tự plan, W = level WOP, B = level BB. Cần data.js của level-sequencer (tự nạp khi chạy trên máy, không thì chọn file)">📋 <span class="tx">Plan</span></button>
+    </div>
+    <div class="grp">
+      <button id="btnPin" title="📌 Gắn thư mục ghi đè (vd Resources\v21) — gắn xong tự nạp thư mục. Alt+bấm = gỡ">📌 <span class="tx lbx" id="pinName">Ghi đè vào…</span></button>
+      <button id="btnPinReload" title="Nạp lại nhanh thư mục 📌" style="display:none">🔄</button>
+    </div>
+    <div class="grp tbig">
+      <button id="btnSave" title="💾 Ghi đè Level N.json vào thư mục 📌 (Ctrl+S). Shift+bấm = tải về thường">💾 <span class="tx">Ghi đè</span></button>
+      <button id="btnDl" title="Tải file Level N.json (đã mã hoá đúng định dạng game)">⬇️ <span class="tx">Tải về</span></button>
+    </div>
+    <div class="grp">
+      <button id="btnCopy" title="Copy JSON đã giải mã (để dán / so)">📋</button>
+      <button id="btnPaste" title="Dán JSON level (mã hoá hay thường) từ clipboard">📥</button>
+      <button id="btnNew" title="Level mới (lưới 7×9)">🆕 <span class="tx">Mới</span></button>
+    </div>
+    <div class="sep"></div>
+    <div class="grp">
+      <button id="btnUndo" title="Hoàn tác (Ctrl+Z)">↶</button>
+      <button id="btnRedo" title="Làm lại (Ctrl+Y / Ctrl+Shift+Z)">↷</button>
+    </div>
+    <div class="grow"></div>
+    <div class="grp"><label class="chk" title="🎮 Chuyển giao diện + thao tác giống scene LevelEditor trong Unity (Groups: SaveAndLoad, MapEditor, BlockEditor, MechanicEditor, PipeEditor…, Inspector bên phải). Bỏ tích = về giao diện thường"><input type="checkbox" id="optUnity"><span class="tx">🎮 Kiểu Unity</span></label></div>
+    <div class="grp">
+      <button id="btnLock" title="🔒 Khoá chỉ xem (chặn mọi sửa bằng chuột/phím)">🔒</button>
+      <button id="btnHelp" title="Bật/tắt chữ chỉ dẫn">❔ <span class="tx">Chỉ dẫn</span></button>
+    </div>
+  </div>
+  <!-- THANH 2: level + chế độ -->
+  <div class="tb" id="topbar2">
+    <div class="grp">
+      <span class="t2lab">📄 Level</span>
+      <button id="btnPrev" class="miniBtn" title="Level trước trong thư viện (PageUp · Alt+←)">◀</button>
+      <input id="lvNum" type="number" min="1" value="1" title="Số level → tên file Level N.json">
+      <button id="btnNext" class="miniBtn" title="Level sau trong thư viện (PageDown · Alt+→)">▶</button>
+    </div>
+    <div class="grp"><span class="t2lab">⏱</span><input id="lvTime" type="number" min="0" step="1" title="levelTime (giây) — WOP 2 không đếm giờ nhưng game vẫn đọc trường này"><span class="mut lbx">s</span></div>
+    <div class="seg" id="segDiff" title="Độ khó (difficulty)">
+      <button data-v="0"><span class="full">Thường 0</span><span class="short" style="display:none">N</span></button>
+      <button data-v="1"><span class="full">Khó 1</span><span class="short" style="display:none">H</span></button>
+      <button data-v="2"><span class="full">Siêu khó 2</span><span class="short" style="display:none">SH</span></button>
+      <button data-v="3"><span class="full">Đặc biệt 3</span><span class="short" style="display:none">SP</span></button>
+    </div>
+    <div class="sep"></div>
+    <div class="seg" id="segMode">
+      <button data-m="sel" title="Chọn / kéo khối, ống (1)">🖐 <span class="tx">Chọn</span></button>
+      <button data-m="floor" title="Vẽ nền: kéo chuột trái = thêm ô, chuột phải / Alt = xoá ô (2)">🧱 <span class="tx">Nền</span></button>
+      <button data-m="block" title="Đặt khối theo hình + màu đang chọn ở bảng trái (3)">🟦 <span class="tx">Khối</span></button>
+      <button data-m="door" title="Đặt ống: rê sát mép ngoài của ô nền (4)">🚰 <span class="tx">Ống</span></button>
+      <button data-m="tile" title="Ô xuyên màu / nút sàn trên nền (5)">⬚ <span class="tx">Ô sàn</span></button>
+      <button data-m="link" title="Nối 2 khối (liên kết): bấm khối A rồi khối B (6)">🔗 <span class="tx">Nối</span></button>
+    </div>
+    <span class="t2br"></span>
+    <div class="grp"><span class="t2lab">🔄</span><button id="btnRot" title="Xoay 90° (R) — khối đang chọn, hoặc bóng khối khi đang đặt">R</button><span class="mut" id="rotLab">0°</span></div>
+    <div class="grp">
+      <label class="chk" title="Hiện số nước trên khối và ống"><input type="checkbox" id="optCount" checked><span class="tx">Số nước</span></label>
+      <label class="chk" title="Viền đỏ chỗ khối/ống đang có lỗi"><input type="checkbox" id="optOverlap"><span class="tx">Viền lỗi</span></label>
+      <label class="chk" title="Hiện mờ khối con trong thùng"><input type="checkbox" id="optHidden" checked><span class="tx">Khối ẩn</span></label>
+      <label class="chk" title="Số toạ độ ô ở mép bàn"><input type="checkbox" id="optCoord"><span class="tx">Toạ độ</span></label>
+      <label class="chk" title="Xoá khối thì trừ luôn đúng lượng nước đó khỏi ống cùng màu (đoạn xa bàn nhất trước) ⇒ màu vẫn cân, không kẹt. Ống hết nước bị xoá theo."><input type="checkbox" id="optDelWater" checked><span class="tx">Xoá trừ nước</span></label>
+    </div>
+    <div class="grp"><button id="btnAnim" title="💧 Bật/tắt nước chảy trong ống (bọt khí)">💧</button><button id="btnShot" title="📷 Lưu ảnh khung nhìn hiện tại (.png)">📷</button></div>
+    <div class="grp"><button id="btnTrim" title="Dời cả level về sát gốc (0,0) — bỏ hàng/cột trống thừa">✂ <span class="tx">Gọn lưới</span></button></div>
+  </div>
+
+  <aside id="left">
+    <div class="card c-lib" id="cardLib">
+      <h3>▦ Thư viện level <span class="mut" id="libInfo"></span></h3>
+      <div class="bd">
+        <div class="helptx">Nạp 📁 / 📌 thư mục <b>vN</b> trong <code>LevelDatas\Resources</code>. Gạch dưới đỏ = Khó · tím = Siêu khó · xanh = Đặc biệt. Chấm đỏ = level có lỗi game.</div>
+        <input id="libSearch" placeholder="Tìm số level…" style="width:100%;margin-bottom:6px">
+        <div id="lib"><span class="mut" style="grid-column:1/-1">Chưa nạp thư mục.</span></div>
+      </div>
+    </div>
+    <div class="card c-sel" id="cardPal">
+      <h3>🟦 Hình khối · màu</h3>
+      <div class="bd">
+        <input id="palSearch" placeholder="Tìm hình khối… (Ctrl+F)">
+        <div class="grpttl" data-g="g1">Hình thường <span>▾</span></div>
+        <div class="shapes" id="shp1"></div>
+        <div class="grpttl" data-g="g2">Hình lớn (Cross55…Square43) <span>▾</span></div>
+        <div class="shapes" id="shp2"></div>
+        <div class="grpttl">Màu (cho khối, ống, ô sàn mới)</div>
+        <div class="cols" id="cols"></div>
+        <div class="mut" style="margin-top:6px"><span style="color:#fbbf24">●</span> = game chưa có prefab khay cho hình này, tool tự dựng khay theo ô.</div>
+        <div class="helptx">Phím <kbd>R</kbd> xoay bóng khối trước khi đặt. Số nước tự tính = <b>4 × số ô</b> (đúng chuẩn level game).</div>
+      </div>
+    </div>
+    <div class="card c-misc" id="cardTile">
+      <h3>⬚ Ô sàn</h3>
+      <div class="bd">
+        <div class="row"><label class="chk"><input type="radio" name="tileKind" value="pass" checked> Ô xuyên màu</label><label class="chk"><input type="radio" name="tileKind" value="btn"> Nút sàn</label><label class="chk" title="Khối RV (listMissionBlocks): bấm ô trống = đặt khối RV theo hình đang chọn (Ô / Chữ nhật 2 / Chữ nhật 3 / Chữ thập) + góc R; bấm khối RV có sẵn = xoá"><input type="radio" name="tileKind" value="rv"> ▶ Khối RV</label></div>
+        <div class="helptx">Chế độ ⬚: bấm ô nền để thêm/bỏ. Màu lấy từ bảng màu.</div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="cwrap">
+    <canvas id="cv"></canvas>
+    <canvas id="ov"></canvas>
+    <div id="noGL">Không tải được three.js / WebGL — kiểm tra file three.min.js cạnh index.html</div>
+    <div class="dock" id="stats"></div>
+    <div class="dock" id="balDock"></div>
+    <div class="dock" id="issueDock"></div>
+    <div class="lockbadge" id="lockBadge" style="display:none">🔒 Đang khoá chỉ xem</div>
+    <div id="hint"></div>
+    <div id="dropHint">Thả file Level N.json vào đây</div>
+  </div>
+
+  <aside id="right">
+    <div class="card c-lv" id="cardLv">
+      <h3>📄 Level</h3>
+      <div class="bd">
+        <div class="kv" id="lvInfo"></div>
+        <div class="row">
+          <div class="fld"><input id="gW" type="number" min="1" max="30"><span class="cap">Rộng (ô)</span></div>
+          <div class="fld"><input id="gH" type="number" min="1" max="30"><span class="cap">Cao (ô)</span></div>
+          <div class="fld"><button id="btnFill">Lấp kín</button><span class="cap">nền = cả khung</span></div>
+        </div>
+        <div class="helptx">Đổi Rộng/Cao chỉ cắt/thêm nền ở mép phải/trên. Vẽ nền ra ngoài khung (chế độ 🧱) thì lưới tự nới, kể cả bên trái/dưới.</div>
+      </div>
+    </div>
+    <div class="card c-sel" id="cardSel"><h3>🎯 Khối đang chọn</h3><div class="bd" id="selBox"></div></div>
+    <div class="card c-door" id="cardDoor"><h3>🚰 Ống đang chọn</h3><div class="bd" id="doorBox"></div></div>
+    <div class="card c-rep closed" id="cardRep">
+      <h3>🎨 Thay màu hàng loạt</h3>
+      <div class="bd">
+        <div class="row"><div class="fld"><select id="repFrom"></select><span class="cap">Từ màu (đang có)</span></div><span>→</span><div class="fld"><select id="repTo"></select><span class="cap">Sang màu</span></div></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="repBlocks" checked> Khối</label><label class="chk"><input type="checkbox" id="repDoors" checked> Ống</label><label class="chk"><input type="checkbox" id="repOther" checked> Ô sàn / kéo / chìa…</label></div>
+        <div class="row"><button id="btnRep">Thay</button><button id="btnSwap" title="Đổi chỗ 2 màu cho nhau">⇄ Đổi chỗ</button></div>
+      </div>
+    </div>
+    <div class="card c-misc closed" id="cardMisc"><h3>🧩 Cơ chế khác trong level</h3><div class="bd" id="miscBox"></div></div>
+    <div class="card c-misc closed" id="cardKeys">
+      <h3>⌨️ Phím tắt</h3>
+      <div class="bd mut" style="font-size:12.5px;line-height:1.7">
+        <kbd>1</kbd>–<kbd>6</kbd> đổi chế độ · <kbd>R</kbd> xoay · <kbd>Del</kbd> xoá<br>
+        Mũi tên: dời khối/ống đang chọn (giữ để dời liên tục)<br>
+        <kbd>Ctrl</kbd>+bấm: chọn thêm khối · kéo nền trống: chọn khung<br>
+        <kbd>Ctrl+C</kbd>/<kbd>Ctrl+V</kbd> chép/dán khối · <kbd>Ctrl+D</kbd> nhân bản<br>
+        <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> (ăn cả khi đang gõ ô) · <kbd>Ctrl+S</kbd> ghi đè<br>
+        <kbd>Alt+←/→</kbd> level trước/sau · <kbd>Ctrl+F</kbd> tìm hình · <kbd>Esc</kbd> bỏ chọn<br>
+        Chuột phải trong 🧱 Nền = tẩy · lăn chuột = phóng to · kéo chuột phải / giữa / Space+kéo = dời khung · đúp chuột = về khung chuẩn
+      </div>
+    </div>
+  </aside>
+</div>
+<div id="toastLuu"></div>
+<input type="file" id="fileIn" accept=".json,.txt" multiple style="display:none">
+<input type="file" id="dirIn" webkitdirectory multiple style="display:none">
+<input type="file" id="planIn" accept=".json" style="display:none">
+<input type="file" id="seqDataIn" accept=".js,.json" style="display:none">
+
+<script src="three.min.js?v=eb854986"></script>
+<script src="khoa.js?v=5dd83819" data-app="app.bin?v=a02e936f" data-seq="seqdata/data.bin?v=d7178b8b"></script>
+</body>
+</html>
