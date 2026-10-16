@@ -105,6 +105,23 @@ body.help .helptx{display:block}
 #issueDock .it:hover{text-decoration:underline}
 #issueDock .e{color:#ff8a8a}#issueDock .w{color:var(--warn)}
 #balDock{right:10px;top:10px;max-height:60%;overflow:auto}
+/* thanh màu nổi trong khung 3D: kéo ở tiêu đề · ◂ gập (chỉ icon) · ✕ đóng (🎨 mở lại) */
+#colBar{left:10px;top:76px;padding:4px;display:flex;flex-direction:column;max-height:calc(100% - 150px);z-index:3;user-select:none}
+#colBar .cbh{display:flex;align-items:center;gap:3px;cursor:move;padding:0 0 4px;touch-action:none}
+#colBar .cbh .t{flex:1;font-weight:800;font-size:12px;color:var(--dim);padding-left:3px;white-space:nowrap}
+#colBar .cbh button{padding:0 5px;height:20px;font-size:11px;border-radius:5px;line-height:1}
+#colBar .cbl{overflow:auto;display:flex;flex-direction:column;gap:2px;min-height:0}
+#colBar .c{display:flex;align-items:center;gap:6px;padding:2px 7px 2px 2px;border-radius:6px;border:1px solid transparent;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:700}
+#colBar .c i{width:18px;height:18px;border-radius:4px;flex:none;box-shadow:0 0 0 1px #0007 inset;display:flex;align-items:center;justify-content:center;font:800 9px/1 "Segoe UI";font-style:normal;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+#colBar .c:hover{background:#ffffff14}
+#colBar .c.on{border-color:var(--ac);background:#f59e0b26}
+#colBar.mini .c span,#colBar.mini .cbh .t{display:none}
+#colBar.mini .c{padding:2px}
+#colBar.mini .cbh{flex-direction:column}
+#colBar.closed{display:none}
+#colBarOpen{position:absolute;left:10px;top:76px;z-index:3;display:none;padding:3px 7px}
+#colBar.closed+#colBarOpen{display:block}
+body.umode #colBar,body.umode #colBarOpen{display:none!important}
 #balDock table{border-collapse:collapse}
 #balDock td{padding:1px 6px;text-align:right}
 #balDock td:first-child{text-align:left}
@@ -239,6 +256,7 @@ body.dragover #dropHint{display:flex}
     <div id="noGL">Không tải được three.js / WebGL — kiểm tra file three.min.js cạnh index.html</div>
     <div class="dock" id="stats"></div>
     <div class="dock" id="balDock"></div>
+    <div class="dock" id="colBar"><div class="cbh" title="Kéo để dời thanh màu"><span class="t">🎨 Màu</span><button data-a="mini" title="Gập: chỉ còn icon màu (bấm lại để hiện tên)">◂</button><button data-a="close" title="Đóng thanh màu (bấm 🎨 để mở lại)">✕</button></div><div class="cbl" id="colBarList"></div></div><button id="colBarOpen" title="🎨 Mở thanh màu">🎨</button>
     <div class="dock" id="issueDock"></div>
     <div class="lockbadge" id="lockBadge" style="display:none">🔒 Đang khoá chỉ xem</div>
     <div id="hint"></div>
@@ -290,6 +308,6 @@ body.dragover #dropHint{display:flex}
 <input type="file" id="seqDataIn" accept=".js,.json" style="display:none">
 
 <script src="three.min.js?v=eb854986"></script>
-<script src="khoa.js?v=d74e7d8d" data-app="app.bin?v=6e869c3c" data-seq="seqdata/data.bin?v=e0346eed" data-seqapp="seq.bin?v=75cf329b"></script>
+<script src="khoa.js?v=d74e7d8d" data-app="app.bin?v=686fbc1b" data-seq="seqdata/data.bin?v=eb026f45" data-seqapp="seq.bin?v=1ac29031"></script>
 </body>
 </html>
